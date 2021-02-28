@@ -30,12 +30,16 @@ Inversion of Control for component logic can vary depending on needs.
 - One of my favorites - state still exists in child component so will not re-render!
 
 3. Add new state/actions (e.g. new reset action and reset button)
-   a. Pass state & reducer up to parent (using hook to construct the reducer & props used for the child) = this is good, but re-renders will occur on parent instead of child.
-   b. Pass Custom Reducer & State to child, but encapsulate other components as children - using render props to pass dispatch?
-   - A tad ugly, and not as user friendly for users (other engineers).
-     c. Similar to above - but encapsulate other components with other child components (UI IoC)?
-   - Not sure how the typescripts types would work (especially for passing the dispatch) - but would be an awesome API!
-   - Example Below
+
+   1. Pass state & reducer up to parent (using hook to construct the reducer & props used for the child) = this is good, but re-renders will occur on parent instead of child.
+
+   2. Pass Custom Reducer & State to child, but encapsulate other components as children - using render props to pass dispatch?
+
+      - A tad ugly, and not as user friendly for users (other engineers).
+
+   3. Similar to above - but encapsulate other components with other child components (UI IoC)?
+      - Not sure how the typescripts types would work (especially for passing the dispatch) - but would be an awesome API!
+      - Example Below
 
 ```tsx
 return (
