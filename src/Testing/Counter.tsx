@@ -11,7 +11,7 @@ export const Counter: React.FC<ICounterProps> = ({
   value,
   onDecrement,
   onIncrement,
-}) => {
+}: ICounterProps) => {
   return (
     <div className="Counter">
       <button onClick={onDecrement}>Decrement</button>

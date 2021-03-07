@@ -1,146 +1,130 @@
-import React, { useReducer } from 'react';
-import type { Reducer, Dispatch, FC } from 'react';
+import React from 'react';
+import {
+  CounterProvider,
+  ICounterReducer,
+  ReducerDispatch,
+  useCounterDispatch,
+  useCounterState,
+} from './CounterContext';
 
-type IExtendsNeverBranch<Predicate, NeverType, ExistingType> = [
-  Predicate,
-] extends [never]
-  ? NeverType
-  : ExistingType;
+type IConnectedCounterStateProp<R extends ICounterReducer, T> =
+  | T
+  | ((state: React.ReducerState<R>) => T);
+type IConnectedCounterDispatchProp<R extends ICounterReducer, T> = T extends () => infer Return
+  ? (dispatch: ReducerDispatch<R>, state: React.ReducerState<R>) => Return
+  : never;
 
-export type IActionCreators<Type, Payload> = (
-  p: Payload,
-) => IExtendsNeverBranch<
-  Payload,
-  { type: Type },
-  { type: Type; payload: Payload }
->;
+interface ICounterLabelProps {
+  className?: string;
+  text: string;
+}
+const CounterLabel: React.FC<ICounterLabelProps> = ({ text, className }: ICounterLabelProps) => (
+  <span className={className}>{text}</span>
+);
 
-export type IActions<ActionCreators extends object> = {
-  [Key in keyof ActionCreators]: ActionCreators[Key] extends IActionCreators<
-    infer T,
-    infer P
-  >
-    ? ReturnType<IActionCreators<T, P>>
-    : never;
-}[keyof ActionCreators];
+interface IConnectedCounterLabelProps<R extends ICounterReducer> {
+  className?: IConnectedCounterStateProp<R, ICounterLabelProps['className']>;
+  text: IConnectedCounterStateProp<R, ICounterLabelProps['text']>;
+}
+const ConnectedCounterLabel = <R extends ICounterReducer>({
+  className,
+  text,
+}: IConnectedCounterLabelProps<R>) => {
+  const state = useCounterState<R>();
+  const _className = React.useMemo(
+    () => (typeof className === 'function' ? className(state) : className),
+    [className, state],
+  );
+  const _text = React.useMemo(() => (typeof text === 'function' ? text(state) : text), [
+    state,
+    text,
+  ]);
+  return <CounterLabel className={_className} text={_text} />;
+};
 
-//#region Counter Reducer Setup
-export interface ICounterState {
-  value: number;
-  // isIncrementDisabled: boolean;
-  // isDecrementDisabled: boolean;
+interface ICounterButtonProps {
+  className?: string;
+  text: string;
+  onClick?: () => void;
+  disabled?: boolean;
+}
+const CounterButton: React.FC<ICounterButtonProps> = ({
+  className,
+  onClick,
+  text,
+  disabled,
+}: ICounterButtonProps) => (
+  <button className={className} onClick={onClick} disabled={disabled}>
+    {text}
+  </button>
+);
+
+export interface IConnectedCounterButtonProps<R extends ICounterReducer> {
+  className?: IConnectedCounterStateProp<R, ICounterButtonProps['className']>;
+  text: IConnectedCounterStateProp<R, ICounterButtonProps['text']>;
+  onClick: IConnectedCounterDispatchProp<R, ICounterButtonProps['onClick']>;
+  disabled?: IConnectedCounterStateProp<R, ICounterButtonProps['disabled']>;
 }
 
-export enum CounterActionTypesEnum {
-  Increment = 'CounterActionTypes_Increment',
-  Decrement = 'CounterActionTypes_Decrement',
-}
-
-type ICounterActionsCreators = {
-  increment: IActionCreators<CounterActionTypesEnum.Increment, number>;
-  decrement: IActionCreators<CounterActionTypesEnum.Decrement, number>;
-};
-
-type ICounterActions = ReturnType<
-  ICounterActionsCreators[keyof ICounterActionsCreators]
->;
-export type ICounterReducer = Reducer<ICounterState, ICounterActions>;
-export type ICustomCounterReducer<Actions> = Reducer<
-  ICounterState,
-  ICounterActions | Actions
->;
-export type ICustomCounterDispatch<Actions> = Dispatch<
-  ICounterActions | Actions
->;
-
-export const counterActionCreators: ICounterActionsCreators = {
-  increment: (payload) => ({ type: CounterActionTypesEnum.Increment, payload }),
-  decrement: (payload) => ({ type: CounterActionTypesEnum.Decrement, payload }),
-};
-
-export const defaultCounterState: ICounterState = {
-  value: 0,
-};
-
-export const defaultCounterReducer: ICounterReducer = (
-  state: ICounterState,
-  action: ICounterActions,
-) => {
-  const exhaustAction = (_: never): ICounterState => state;
-  const { type, payload } = action;
-  switch (type) {
-    case CounterActionTypesEnum.Increment:
-      return { ...state, value: state.value + payload };
-    case CounterActionTypesEnum.Decrement:
-      return { ...state, value: state.value - payload };
-    default:
-      return exhaustAction(type);
-  }
-};
-//#endregion
-
-interface ICounterButtonProps<Actions> {
-  onClick?: (
-    state: ICounterState,
-    dispatch: ICustomCounterDispatch<Actions>,
-  ) => () => void;
-  disabled?: (state: ICounterState) => () => void;
-  // text: string
-}
-
-interface ICounterProps<Actions> {
-  initialState?: ICounterState;
-  customReducer?: ICustomCounterReducer<Actions>;
-  // LeftButton: ()
-  // LeftButton: React.ReactElement<ICounterButtonProps<Actions>>;
-  children?: React.ReactNode;
-}
-
-const cloneButton = <Actions extends object>(
-  child: React.ReactElement<ICounterButtonProps<Actions>>,
-  state: ICounterState,
-  dispatch: ICustomCounterDispatch<Actions>,
-) => {
-  if (React.isValidElement(child)) {
-    const props = child.props;
-    if (props.onClick !== undefined) {
-      // we want to inject the dependency into the onclick
-      // so we can have a clean api compared to render props
-      // in example below - dispatch is injected and scoped to onClick.
-      // E.g. onClick={(dispatch) => dispatch(NewCounterActionsEnum.Reset)}
-      props.onClick;
-
-      // Worst case if this is not possible = we can useContext
-      // Counter.Button will call the internal useContext & maybe then we can have a custom onClick?
-    }
-  }
-  return child;
-};
-
-const Counter = <Actions extends object>(props: ICounterProps<Actions>) => {
-  const {
-    initialState = defaultCounterState,
-    customReducer = defaultCounterReducer,
-    // LeftButton,
-    children,
-  } = props;
-  const [state, dispatch] = useReducer(customReducer, initialState);
-
-  // React.Children.map(children, child => {
-  //   return null;
-  // })
-
-  // LeftButton.props;
-
+export const ConnectedCounterButton = <R extends ICounterReducer>({
+  className,
+  text,
+  onClick,
+  disabled,
+}: IConnectedCounterButtonProps<R>): JSX.Element => {
+  const state = useCounterState<R>();
+  const dispatch = useCounterDispatch<R>();
+  const _className = React.useMemo(
+    () => (typeof className === 'function' ? className(state) : className),
+    [className, state],
+  );
+  const _text = React.useMemo(() => (typeof text === 'function' ? text(state) : text), [
+    state,
+    text,
+  ]);
+  const _onClick = React.useCallback(() => onClick(dispatch, state), [onClick, dispatch, state]);
+  const _disabled = React.useMemo(
+    () => (typeof disabled === 'function' ? disabled(state) : disabled),
+    [disabled, state],
+  );
   return (
-    <div className="Counter">
-      {/* <LeftButton /> */}
-      <span>Value {state.value}</span>
-      <button onClick={() => dispatch(counterActionCreators.increment(1))}>
-        Increment
-      </button>
-    </div>
+    <CounterButton className={_className} text={_text} onClick={_onClick} disabled={_disabled} />
   );
 };
 
+export interface ICounterProps<R extends ICounterReducer> {
+  initialState?: React.ReducerState<R>;
+  reducer?: R;
+  children?: React.ReactNode;
+}
+
+export interface ITypedCounterSubComponents<R extends ICounterReducer> {
+  CounterLabel: React.FC<ICounterLabelProps>;
+  ConnectedCounterLabel: React.FC<IConnectedCounterLabelProps<R>>;
+  CounterButton: React.FC<ICounterButtonProps>;
+  ConnectedCounterButton: React.FC<IConnectedCounterButtonProps<R>>;
+}
+export type ITypedCounter<R extends ICounterReducer> = ITypedCounterSubComponents<R> &
+  React.FC<ICounterProps<R>>;
+
+const Counter: ITypedCounter<ICounterReducer> = <R extends ICounterReducer>(
+  props: ICounterProps<R>,
+): JSX.Element => {
+  return (
+    <CounterProvider initialState={props.initialState} reducer={props.reducer}>
+      <div className="Counter">{props.children}</div>
+    </CounterProvider>
+  );
+};
+Counter.displayName = 'Counter';
+Counter.CounterLabel = CounterLabel;
+Counter.ConnectedCounterLabel = ConnectedCounterLabel;
+Counter.CounterButton = CounterButton;
+Counter.ConnectedCounterButton = ConnectedCounterButton;
+
 export default Counter;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getTypedCounter = <R extends React.Reducer<any, any>>(
+  counter: ITypedCounter<ICounterReducer>,
+): ITypedCounter<R> => (counter as unknown) as ITypedCounter<R>;

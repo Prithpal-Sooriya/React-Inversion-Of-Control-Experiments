@@ -8,11 +8,7 @@ import {
   Counter,
   CounterActionsEnum,
 } from './Counter';
-import type {
-  ICounterState,
-  ICustomCounterReducer,
-  IUseCounterProps,
-} from './Counter';
+import type { ICounterState, ICustomCounterReducer, IUseCounterProps } from './Counter';
 
 const overwriteCounterState: ICounterState = {
   ...defaultCounterState,
@@ -23,10 +19,7 @@ enum NewCounterActionsEnum {
   Reset = 'NewCounterActions_Reset',
 }
 
-const appendedCounterReducer: ICustomCounterReducer<NewCounterActionsEnum> = (
-  state,
-  action,
-) => {
+const appendedCounterReducer: ICustomCounterReducer<NewCounterActionsEnum> = (state, action) => {
   switch (action) {
     case NewCounterActionsEnum.Reset:
       return { ...state, value: 0 };
@@ -37,10 +30,7 @@ const appendedCounterReducer: ICustomCounterReducer<NewCounterActionsEnum> = (
   }
 };
 
-const setDisabledReducer: ICustomCounterReducer<NewCounterActionsEnum> = (
-  state,
-  action,
-) => {
+const setDisabledReducer: ICustomCounterReducer<NewCounterActionsEnum> = (state, action) => {
   return {
     ...state,
     isDecrementDisabled: state.value <= 0,
@@ -48,23 +38,15 @@ const setDisabledReducer: ICustomCounterReducer<NewCounterActionsEnum> = (
   };
 };
 
-const combineReducers = <S, A>(
-  ...reducers: Array<Reducer<S, A>>
-): Reducer<S, A> => {
+const combineReducers = <S, A>(...reducers: Array<Reducer<S, A>>): Reducer<S, A> => {
   const finalReducer: Reducer<S, A> = (initialState, action) => {
-    return reducers.reduce(
-      (state, reducer) => reducer(state, action),
-      initialState,
-    );
+    return reducers.reduce((state, reducer) => reducer(state, action), initialState);
   };
 
   return finalReducer;
 };
 
-const useCounterPropsReducer = combineReducers(
-  appendedCounterReducer,
-  setDisabledReducer,
-);
+const useCounterPropsReducer = combineReducers(appendedCounterReducer, setDisabledReducer);
 
 /*
   Example of Counter that uses the useCounterProps
@@ -76,19 +58,13 @@ const App: FC = () => {
     useCounterPropsReducer,
     overwriteCounterState,
   );
-  const onReset = useCallback(
-    () => useCounterProps.dispatch(NewCounterActionsEnum.Reset),
-    [],
-  );
+  const onReset = useCallback(() => useCounterProps.dispatch(NewCounterActionsEnum.Reset), [
+    useCounterProps,
+  ]);
   return (
     <div className="App">
-      <h1>
-        Example of Controlled Counter Component using Invariant of Control
-      </h1>
-      <h2>
-        Uses Custom Hook that allows custom reducer/initial state for improved
-        extensibility
-      </h2>
+      <h1>Example of Controlled Counter Component using Invariant of Control</h1>
+      <h2>Uses Custom Hook that allows custom reducer/initial state for improved extensibility</h2>
       {/*
         Spreading as we want a new object props to be constrained to the counter actions (not the new actions).
         See by removing the object spread - the dispatches are different (since our new dispatch contains new actions).

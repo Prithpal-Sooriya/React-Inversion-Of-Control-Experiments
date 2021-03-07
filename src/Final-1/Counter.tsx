@@ -52,15 +52,9 @@ export const useCounter = <ActionTypes extends string>(
 ): IUseCounterProps<ActionTypes> => {
   const [state, dispatch] = useReducer(customReducer, initialState);
 
-  const increment = useCallback(
-    () => dispatch(CounterActionsEnum.Increment),
-    [],
-  );
+  const increment = useCallback(() => dispatch(CounterActionsEnum.Increment), []);
 
-  const decrement = useCallback(
-    () => dispatch(CounterActionsEnum.Decrement),
-    [],
-  );
+  const decrement = useCallback(() => dispatch(CounterActionsEnum.Decrement), []);
 
   return {
     increment,
@@ -73,10 +67,10 @@ export const useCounter = <ActionTypes extends string>(
 interface ICounterProps {
   useCounterProps?: IUseCounterProps<CounterActionsEnum>;
 }
-export const Counter = ({
-  useCounterProps = useCounter(defaultCounterReducer, defaultCounterState),
-}: ICounterProps) => {
-  const { increment, decrement, state } = useCounterProps;
+export const Counter = (props: ICounterProps): JSX.Element => {
+  const defaultCounterProps = useCounter(defaultCounterReducer, defaultCounterState);
+  const { useCounterProps } = props;
+  const { increment, decrement, state } = useCounterProps || defaultCounterProps;
   return (
     <div className="Counter">
       <button onClick={decrement} disabled={state.isDecrementDisabled}>

@@ -13,10 +13,7 @@ import {
   defaultCounterState as iIoCCounterWithHooksDefaultState,
 } from './IoC_CounterWithHooks';
 import type { ICounterReducer, ICounterState } from './IoC_Counter';
-import type {
-  ICustomCounterReducer,
-  ICounterState as IoCWithHooksCounterState,
-} from './IoC_CounterWithHooks';
+import type { ICustomCounterReducer } from './IoC_CounterWithHooks';
 import '../App.css';
 
 const initialCounterState: ICounterState = {
@@ -40,10 +37,7 @@ enum NewCounterActionsEnum {
   Reset = 'NewCounterActions_Reset',
 }
 
-const appendedCounterReducer: ICustomCounterReducer<NewCounterActionsEnum> = (
-  state,
-  action,
-) => {
+const appendedCounterReducer: ICustomCounterReducer<NewCounterActionsEnum> = (state, action) => {
   switch (action) {
     case NewCounterActionsEnum.Reset:
       return { ...state, value: 0 };
@@ -52,10 +46,7 @@ const appendedCounterReducer: ICustomCounterReducer<NewCounterActionsEnum> = (
   }
 };
 
-const setDisabledReducer: ICustomCounterReducer<NewCounterActionsEnum> = (
-  state,
-  action,
-) => {
+const setDisabledReducer: ICustomCounterReducer<NewCounterActionsEnum> = (state, action) => {
   return {
     ...state,
     isDecrementDisabled: state.value <= 0,
@@ -63,46 +54,37 @@ const setDisabledReducer: ICustomCounterReducer<NewCounterActionsEnum> = (
   };
 };
 
-const combineReducers = <S, A>(
-  ...reducers: Array<React.Reducer<S, A>>
-): React.Reducer<S, A> => {
+const combineReducers = <S, A>(...reducers: Array<React.Reducer<S, A>>): React.Reducer<S, A> => {
   const combinedReducer: React.Reducer<S, A> = (initialState, action) => {
-    return reducers.reduce(
-      (state, reducer) => reducer(state, action),
-      initialState,
-    );
+    return reducers.reduce((state, reducer) => reducer(state, action), initialState);
   };
 
   return combinedReducer;
 };
 
-const useCounterPropsReducer = combineReducers(
-  appendedCounterReducer,
-  setDisabledReducer,
-);
-const useCounterPropsInitialState = useCounterPropsReducer(
+const combinedCounterPropsReducer = combineReducers(appendedCounterReducer, setDisabledReducer);
+const useCounterPropsInitialState = combinedCounterPropsReducer(
   iIoCCounterWithHooksDefaultState,
   NewCounterActionsEnum.Reset,
 );
 
 const IoCCounterWithReset: React.FC = () => {
-  const props = useCounterProps<NewCounterActionsEnum>(
-    useCounterPropsReducer,
+  const counterProps = useCounterProps<NewCounterActionsEnum>(
+    combinedCounterPropsReducer,
     useCounterPropsInitialState,
   );
-  const onReset = useCallback(
-    () => props.dispatch(NewCounterActionsEnum.Reset),
-    [],
-  );
+  const onReset = useCallback(() => counterProps.dispatch(NewCounterActionsEnum.Reset), [
+    counterProps,
+  ]);
   return (
     <>
-      <IoCCounterWithHooks {...props} />
+      <IoCCounterWithHooks {...counterProps} />
       <button onClick={onReset}>reset</button>
     </>
   );
 };
 
-function App() {
+function App(): JSX.Element {
   const [counterValue, setCounterValue] = useState(0);
   const onIncrement = () => setCounterValue((c) => c + 1);
   const onDecrement = () => setCounterValue((c) => c - 1);
@@ -111,25 +93,16 @@ function App() {
       <h1>Example of Controlled Counter Component</h1>
       <Counter {...{ value: counterValue, onIncrement, onDecrement }} />
 
-      <h1>
-        Example of a Uncontrolled Counter Component (that uses reducer pattern)
-      </h1>
+      <h1>Example of a Uncontrolled Counter Component (that uses reducer pattern)</h1>
       <UnControlledCounter />
 
       <h1>Inversion of Control Counter Component</h1>
-      <h2>
-        We can pass in an initial state and a reducer (so we can customize
-        actions)
-      </h2>
-      <IoCCounter
-        initialState={initialCounterState}
-        customReducer={overwriteCounterReducer}
-      />
+      <h2>We can pass in an initial state and a reducer (so we can customize actions)</h2>
+      <IoCCounter initialState={initialCounterState} customReducer={overwriteCounterReducer} />
 
       <h1>Inversion of Control using Hooks</h1>
       <h2>
-        Hooks allow us to decouple logic from components (easy to reuse/move
-        logic to components)
+        Hooks allow us to decouple logic from components (easy to reuse/move logic to components)
       </h2>
       <IoCCounterWithReset />
     </div>

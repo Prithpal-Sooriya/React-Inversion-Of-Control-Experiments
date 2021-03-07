@@ -1,4 +1,4 @@
-import React, { useCallback, useReducer } from 'react';
+import React, { useReducer } from 'react';
 import type { FC, Reducer } from 'react';
 
 export interface ICounterState {
@@ -38,13 +38,9 @@ export const UnControlledCounter: FC = () => {
   );
   return (
     <div className="Counter">
-      <button onClick={() => dispatch(CounterActionsEnum.Decrement)}>
-        Decrement
-      </button>
+      <button onClick={() => dispatch(CounterActionsEnum.Decrement)}>Decrement</button>
       <span>Value {value}</span>
-      <button onClick={() => dispatch(CounterActionsEnum.Increment)}>
-        Increment
-      </button>
+      <button onClick={() => dispatch(CounterActionsEnum.Increment)}>Increment</button>
     </div>
   );
 };
@@ -57,20 +53,13 @@ interface IIoCCounterProps {
 export const IoCCounter: FC<IIoCCounterProps> = ({
   initialState = defaultCounterState,
   customReducer = defaultCounterReducer,
-}) => {
-  const [{ value }, dispatch] = useReducer<ICounterReducer>(
-    customReducer,
-    initialState,
-  );
+}: IIoCCounterProps) => {
+  const [{ value }, dispatch] = useReducer<ICounterReducer>(customReducer, initialState);
   return (
     <div className="Counter">
-      <button onClick={() => dispatch(CounterActionsEnum.Decrement)}>
-        Decrement
-      </button>
+      <button onClick={() => dispatch(CounterActionsEnum.Decrement)}>Decrement</button>
       <span>Value {value}</span>
-      <button onClick={() => dispatch(CounterActionsEnum.Increment)}>
-        Increment
-      </button>
+      <button onClick={() => dispatch(CounterActionsEnum.Increment)}>Increment</button>
     </div>
   );
 };

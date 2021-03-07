@@ -1,5 +1,5 @@
 import React, { useCallback, useReducer } from 'react';
-import type { FC, Reducer, Dispatch } from 'react';
+import type { Reducer, Dispatch } from 'react';
 
 export interface ICounterState {
   value: number;
@@ -53,14 +53,8 @@ export const useCounterProps = <ActionTypes extends string>(
 ): IUseCounterPropsReturnType<ActionTypes> => {
   const [state, dispatch] = useReducer(customReducer, initialState);
 
-  const increment = useCallback(
-    () => dispatch(CounterActionsEnum.Increment),
-    [],
-  );
-  const decrement = useCallback(
-    () => dispatch(CounterActionsEnum.Decrement),
-    [],
-  );
+  const increment = useCallback(() => dispatch(CounterActionsEnum.Increment), []);
+  const decrement = useCallback(() => dispatch(CounterActionsEnum.Decrement), []);
 
   return {
     increment,
@@ -72,7 +66,7 @@ export const useCounterProps = <ActionTypes extends string>(
 
 export function IoCCounterWithHooks<ActionTypes extends string>(
   props: IUseCounterPropsReturnType<ActionTypes>,
-) {
+): JSX.Element {
   const { increment, decrement, state } = props;
   return (
     <div className="Counter">
