@@ -33,6 +33,7 @@ Inversion of Control for component logic can vary depending on needs.
 
    1. Pass state & reducer up to parent (using hook to construct the reducer & props used for the child) = this is good, but re-renders will occur on parent instead of child.
 
+
    2. Pass Custom Reducer & State to child, but encapsulate other components as children - using render props to pass dispatch?
 
       - A tad ugly, and not as user friendly for users (other engineers).
@@ -53,3 +54,6 @@ return (
   </Counter>
 );
 ```
+
+TODO:
+- Create Doc for levels of inversion (for UI and UI logic)
